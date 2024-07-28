@@ -3,4 +3,5 @@ pip
 autopep8
 
 # App
-flask
+Flask==2.0.1
+google-cloud-storage==1.42.3
