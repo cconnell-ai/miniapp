@@ -1,12 +1,144 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Hello World</title>
-  </head>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>File Upload</title>
+    <style>
+        body {
+            background-color: #121212;
+            color: #ffffff;
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .container {
+            width: 80%;
+            max-width: 600px;
+            margin: 20px;
+            padding: 20px;
+            border: 2px dashed #ffffff;
+            border-radius: 10px;
+            text-align: center;
+        }
+        .drag-drop {
+            margin-bottom: 20px;
+        }
+        .file-list {
+            margin-top: 20px;
+            width: 100%;
+        }
+        .file-list table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .file-list th, .file-list td {
+            border: 1px solid #ffffff;
+            padding: 8px;
+            text-align: left;
+        }
+        .file-list th {
+            background-color: #333333;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="drag-drop" id="drag-drop-area">
+            <h2>Drag and Drop Files Here</h2>
+            <p>or click to select files</p>
+            <input type="file" id="file-input" multiple style="display: none;">
+        </div>
+        <div class="file-list">
+            <h2>Uploaded Files</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>File Name</th>
+                        <th>Upload Date</th>
+                    </tr>
+                </thead>
+                <tbody id="file-list-body">
+                    <!-- File list will be populated here -->
+                </tbody>
+            </table>
+        </div>
+    </div>
 
-  <body>
-    <h1>Hello World!!!</h1>
-  </body>
+    <script>
+        const dragDropArea = document.getElementById('drag-drop-area');
+        const fileInput = document.getElementById('file-input');
+        const fileListBody = document.getElementById('file-list-body');
+
+        dragDropArea.addEventListener('click', () => fileInput.click());
+
+        dragDropArea.addEventListener('dragover', (event) => {
+            event.preventDefault();
+            dragDropArea.style.borderColor = '#00e676';
+        });
+
+        dragDropArea.addEventListener('dragleave', () => {
+            dragDropArea.style.borderColor = '#ffffff';
+        });
+
+        dragDropArea.addEventListener('drop', (event) => {
+            event.preventDefault();
+            dragDropArea.style.borderColor = '#ffffff';
+            const files = event.dataTransfer.files;
+            uploadFiles(files);
+        });
+
+        fileInput.addEventListener('change', (event) => {
+            const files = event.target.files;
+            uploadFiles(files);
+        });
+
+        function uploadFiles(files) {
+            for (const file of files) {
+                const formData = new FormData();
+                formData.append('file', file);
+                fetch('/upload', {
+                    method: 'POST',
+                    body: formData,
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.message) {
+                        fetchFileList();
+                    } else {
+                        alert(data.error);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                });
+            }
+        }
+
+        function fetchFileList() {
+            fetch('/files')
+                .then(response => response.json())
+                .then(data => {
+                    fileListBody.innerHTML = '';
+                    data.files.forEach(file => {
+                        const row = document.createElement('tr');
+                        const nameCell = document.createElement('td');
+                        const dateCell = document.createElement('td');
+                        nameCell.textContent = file.name;
+                        dateCell.textContent = new Date(file.uploaded_at).toLocaleString();
+                        row.appendChild(nameCell);
+                        row.appendChild(dateCell);
+                        fileListBody.appendChild(row);
+                    });
+                });
+        }
+
+        // Fetch the file list on initial load
+        fetchFileList();
+    </script>
+</body>
 </html>
