@@ -1,7 +1,6 @@
 import os
 from flask import Flask, request, jsonify, send_file
 from google.cloud import storage
-from werkzeug.utils import secure_filename
 
 app = Flask(__name__)
 
